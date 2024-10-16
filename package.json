@@ -1,0 +1,27 @@
+{
+  "name": "trynative",
+  "version": "1.0.0",
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@react-native-community/datetimepicker": "^8.2.0",
+    "@react-native-picker/picker": "^2.8.1",
+    "bcrypt": "^5.1.1",
+    "expo": "~51.0.28",
+    "expo-auth-session": "~5.5.2",
+    "expo-router": "^3.5.23",
+    "expo-status-bar": "~1.12.1",
+    "react": "18.2.0",
+    "react-native": "0.74.5",
+    "undefined": "expo-auth-session/providers/google"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0"
+  },
+  "private": true
+}
