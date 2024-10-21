@@ -1,27 +1,82 @@
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image } from 'react-native';
-import React, { useState } from 'react';
-import { Link } from 'expo-router';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Link, useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Login() {
-  // State for password visibility and remember me option
+  // State for email, password, password visibility, and remember me option
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isRememberMeChecked, setIsRememberMeChecked] = useState(false);
+
+  // Initialize the router
+  const router = useRouter();
+
+  // Load stored email when the component mounts
+  useEffect(() => {
+    const loadEmail = async () => {
+      try {
+        const storedEmail = await AsyncStorage.getItem('userEmail');
+        if (storedEmail) {
+          setEmail(storedEmail);
+          setIsRememberMeChecked(true); // Check the Remember Me box if an email is found
+        }
+      } catch (error) {
+        console.error('Failed to load email:', error);
+      }
+    };
+
+    loadEmail();
+  }, []);
+
+  const handleLogin = async () => {
+    // Make API call to log in the user
+    fetch('http://192.168.130.209:3000/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    })
+      .then(async (response) => {
+        const data = await response.json();
+        if (data.error) {
+          Alert.alert('Login Failed', data.error); // Show error message
+        } else {
+          Alert.alert('Login Successful', data.message); // Show success message
+
+          // Save token if available
+          if (data.token) {
+            await AsyncStorage.setItem('userToken', data.token);
+          }
+
+          // Save email if "Remember Me" is checked
+          if (isRememberMeChecked) {
+            await AsyncStorage.setItem('userEmail', email);
+          } else {
+            await AsyncStorage.removeItem('userEmail');
+          }
+
+          // Redirect to the home screen
+          router.push('/home'); // Change '/home' to your home screen route
+        }
+      })
+      .catch((error) => {
+        console.error('Login error:', error);
+        Alert.alert('Error', 'An error occurred. Please try again.');
+      });
+  };
 
   return (
     <View style={styles.container}>
       {/* Back Icon */}
       <Link href="/sign-up" style={styles.backButton}>
-        <Image
-          source={require('../assets/arrow.png')}
-          style={styles.backIcon}
-        />
+        <Image source={require('../assets/arrow.png')} style={styles.backIcon} />
       </Link>
 
       {/* Logo */}
-      <Image
-        source={require('../assets/Splash2.png')}
-        style={styles.logo}
-      />
+      <Image source={require('../assets/Splash2.png')} style={styles.logo} />
 
       {/* Main Text */}
       <Text style={styles.mainText}>Log in to your account</Text>
@@ -32,6 +87,8 @@ export default function Login() {
         placeholder="Email"
         placeholderTextColor="#888"
         keyboardType="email-address"
+        value={email}
+        onChangeText={setEmail} // Update email state
       />
 
       {/* Password Input */}
@@ -40,13 +97,12 @@ export default function Login() {
           style={styles.passwordInput}
           placeholder="Password"
           placeholderTextColor="#888"
-          secureTextEntry={!isPasswordVisible} // Toggle based on state
+          secureTextEntry={!isPasswordVisible}
+          value={password}
+          onChangeText={setPassword} // Update password state
         />
         <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
-          <Image
-            source={require('../assets/eye-icon.png')}
-            style={styles.eyeIcon}
-          />
+          <Image source={require('../assets/eye-icon.png')} style={styles.eyeIcon} />
         </TouchableOpacity>
       </View>
 
@@ -61,10 +117,8 @@ export default function Login() {
       </View>
 
       {/* Log in Button */}
-      <TouchableOpacity style={styles.loginButton}>
-        <Link href="/home" style={styles.loginButton}>
-          <Text style={styles.loginButtonText}>Log in</Text>
-        </Link>
+      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+        <Text style={styles.loginButtonText}>Log in</Text>
       </TouchableOpacity>
 
       {/* Continue with Google Button */}
@@ -73,10 +127,7 @@ export default function Login() {
       </View>
 
       <TouchableOpacity style={styles.googleButton}>
-        <Image
-          source={require('../assets/google-icon.png')}
-          style={styles.googleIcon}
-        />
+        <Image source={require('../assets/google-icon.png')} style={styles.googleIcon} />
         <Text style={styles.googleButtonText}>Continue with Google</Text>
       </TouchableOpacity>
 

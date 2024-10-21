@@ -1,42 +1,51 @@
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
 import React, { useState } from 'react';
-import { Link, useRouter } from 'expo-router'; // Use useRouter for programmatic navigation
+import { Link, useRouter } from 'expo-router';
 
 export default function SignUp() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [passwordVisible, setPasswordVisible] = useState(false); // Manage password visibility
+  const [passwordVisible, setPasswordVisible] = useState(false);
 
-  const router = useRouter(); // For navigation
+  const router = useRouter();
 
-  // Function to toggle password visibility
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
   };
 
-  // Function to handle form submission
+  // Function to validate the password
+  const isPasswordValid = (password) => {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return passwordRegex.test(password);
+  };
+
   const handleSignUp = async () => {
     if (!name || !email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
+    if (!isPasswordValid(password)) {
+      Alert.alert('Error', 'Password must be at least 8 characters long and include uppercase letters, lowercase letters, numbers, and symbols.');
+      return;
+    }
+
     try {
-      // Make an API request to save the user data in the database
-      const response = await fetch('http://your-api-endpoint.com/signup', {
+      const response = await fetch('http://192.168.130.209:3000/api/sign-up', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ fullname: name, email, password }), // Adjust according to your backend API structure
+        body: JSON.stringify({ name, email, password }), // Adjusted to match backend
       });
 
       if (response.ok) {
         Alert.alert('Success', 'Account created successfully!');
-        router.push('/login'); // Navigate to the login page after successful signup
+        router.push('/login');
       } else {
-        Alert.alert('Error', 'Failed to create account');
+        const errorData = await response.json();
+        Alert.alert('Error', errorData.error || 'Failed to create account');
       }
     } catch (error) {
       Alert.alert('Error', 'Something went wrong. Please try again.');
@@ -46,24 +55,13 @@ export default function SignUp() {
 
   return (
     <View style={styles.container}>
-      {/* Back Icon */}
-      <Link href="/sign-up" style={styles.backButton}> {/* Directly use Link here */}
-        <Image
-          source={require('../assets/arrow.png')} // Adjust path for your back icon
-          style={styles.backIcon}
-        />
+      <Link href="/sign-up" style={styles.backButton}>
+        <Image source={require('../assets/arrow.png')} style={styles.backIcon} />
       </Link>
 
-      {/* Logo */}
-      <Image
-        source={require('../assets/Splash2.png')} // Adjust path for your Pet Med logo
-        style={styles.logo}
-      />
-
-      {/* Main Text */}
+      <Image source={require('../assets/Splash2.png')} style={styles.logo} />
       <Text style={styles.mainText}>Create your account</Text>
 
-      {/* Name Input */}
       <TextInput
         style={styles.input}
         placeholder="Name"
@@ -72,7 +70,6 @@ export default function SignUp() {
         onChangeText={setName}
       />
 
-      {/* Email Input */}
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -82,35 +79,28 @@ export default function SignUp() {
         onChangeText={setEmail}
       />
 
-      {/* Password Input */}
       <View style={styles.passwordContainer}>
         <TextInput
           style={styles.passwordInput}
           placeholder="Password"
           placeholderTextColor="#888"
-          secureTextEntry={!passwordVisible} // Toggle based on state
+          secureTextEntry={!passwordVisible}
           value={password}
           onChangeText={setPassword}
         />
         <TouchableOpacity onPress={togglePasswordVisibility}>
-          <Image
-            source={require('../assets/eye-icon.png')} // Adjust path for eye icon
-            style={styles.eyeIcon}
-          />
+          <Image source={require('../assets/eye-icon.png')} style={styles.eyeIcon} />
         </TouchableOpacity>
       </View>
 
-      {/* Password Info Text */}
       <Text style={styles.passwordInfo}>
         Use 8 or more characters with a mix of uppercase and lowercase letters, numbers, and symbols
       </Text>
 
-      {/* Get Started Button */}
       <TouchableOpacity style={styles.getStartedButton} onPress={handleSignUp}>
         <Text style={styles.getStartedButtonText}>Get Started</Text>
       </TouchableOpacity>
 
-      {/* Already Signed Up Link */}
       <TouchableOpacity>
         <Link href="/login">
           <Text style={styles.loginText}>
@@ -127,15 +117,14 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF', // White background
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
   },
   backButton: {
     position: 'absolute',
     top: 20,
     left: 25,
-    // Add padding to ensure the image is fully visible
-    padding: 5, // Optional: Adjust padding as needed
+    padding: 5,
   },
   backIcon: {
     width: 40,

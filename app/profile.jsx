@@ -1,13 +1,33 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { Link } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ProfileScreen() {
+  const [user, setUser] = useState(null);
   const [pets, setPets] = useState([
     { id: 1, name: 'Bogart', records: 0, reminders: 0 },
     { id: 2, name: 'Fluffy', records: 1, reminders: 2 },
     { id: 3, name: 'Max', records: 3, reminders: 1 },
   ]);
+
+  // Fetch user details when the component mounts
+  useEffect(() => {
+    fetchUserDetails();
+  }, []);
+
+  const fetchUserDetails = async () => {
+    try {
+      const userData = await AsyncStorage.getItem('userDetails');
+      if (userData) {
+        setUser(JSON.parse(userData));
+      } else {
+        console.error('No user data found');
+      }
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+    }
+  };
 
   const renderPets = () =>
     pets.map((pet) => (
@@ -44,12 +64,14 @@ export default function ProfileScreen() {
             <View style={styles.profileRow}>
               <Image source={require('../assets/profile-icon.png')} style={styles.profileImage} />
               <View style={styles.profileTextContainer}>
-                <Text style={styles.profileName}>Bogart Batumbakal</Text>
-                <Text style={styles.profileEmail}>bogartbatumbakal@gmail.com</Text>
+                <Text style={styles.profileName}>{user ? user.name : 'Loading...'}</Text>
+                <Text style={styles.profileEmail}>{user ? user.email : 'Loading...'}</Text>
               </View>
             </View>
             <TouchableOpacity style={styles.editProfileButton}>
-              <Text style={styles.editProfileButtonText}>Edit Profile</Text>
+              <Link href="/edit" style={styles.editProfileButtonText}>
+                <Text style={styles.editProfileButtonText}>Edit Profile</Text>
+              </Link>
             </TouchableOpacity>
           </View>
 
@@ -57,7 +79,9 @@ export default function ProfileScreen() {
           <View style={styles.myPetsContainer}>
             <Text style={styles.myPetsTitle}>My Pets</Text>
             <TouchableOpacity style={styles.addPetButton}>
-              <Text style={styles.addPetButtonText}>Add Pet</Text>
+              <Link href="/addpet" style={styles.addPetButtonText}>
+                <Text style={styles.addPetButtonText}>Add Pet</Text>
+              </Link>
             </TouchableOpacity>
           </View>
 
@@ -65,31 +89,32 @@ export default function ProfileScreen() {
 
           {/* Logout Button */}
           <TouchableOpacity style={styles.logoutButton}>
-          <Link href="/login">
-            <Text style={styles.logoutButtonText}>Log Out</Text>
-         </Link>
+            <Link href="/login" style={styles.logoutButtonText}>
+              <Text style={styles.logoutButtonText}>Log Out</Text>
+            </Link>
           </TouchableOpacity>
         </ScrollView>
       </View>
 
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
-        <Link href="/home" style={styles.navButton}> {/* Adjust this path based on your routes */}
+        <Link href="/home" style={styles.navButton}>
           <Image source={require('../assets/home-icon.png')} style={styles.navIcon} />
         </Link>
-        <Link href="/reservation" style={styles.navButton}> {/* Adjust this path based on your routes */} 
+        <Link href="/reservation" style={styles.navButton}>
           <Image source={require('../assets/clipboard-icon.png')} style={styles.navIcon} />
         </Link>
-        <Link href="/reminder" style={styles.navButton}> {/* Adjust this path based on your routes */}
+        <Link href="/reminder" style={styles.navButton}>
           <Image source={require('../assets/notifications-icon.png')} style={styles.navIcon} />
         </Link>
-        <Link href="/profile" style={styles.navButton}> {/* Adjust this path based on your routes */}
+        <Link href="/profile" style={styles.navButton}>
           <Image source={require('../assets/profile-icon.png')} style={styles.navIcon} />
         </Link>
       </View>
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -103,27 +128,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: '15%',
   },
-  backIcon: {
-    width: 40,
-    height: 40,
-  },
   profileTitle: {
     color: '#FFFFFF',
     fontSize: 20,
     flex: 1,
     textAlign: 'center',
+
   },
   contentContainer: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 30, // Top border radius
-    borderTopRightRadius: 30, // Top border radius
-    elevation: 5, // Optional: gives a shadow effect
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    elevation: 5,
     marginTop: -25,
   },
   scrollContainer: {
     flexGrow: 1,
-    paddingBottom: 80, // Prevents content from being hidden under the bottom navigation
+    paddingBottom: 80,
   },
   profileContainer: {
     alignItems: 'flex-start',
@@ -179,7 +201,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#3B5998',
     paddingVertical: 10,
     borderRadius: 20,
-    width: '30%', // Adjust width if necessary
+    width: '30%',
     alignItems: 'center',
   },
   addPetButtonText: {
@@ -244,18 +266,18 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     marginTop: 20,
-    backgroundColor: '#FFC107', // Color for the logout button
+    marginLeft: '55%',
+    backgroundColor: '#FFC107',
     paddingVertical: 10,
     borderRadius: 20,
     alignItems: 'center',
-    marginHorizontal: 20,
-    alignSelf: 'flex-end',
+    height: '7%',
     width: '40%',
   },
   logoutButtonText: {
+    fontSize: 20,
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 20,
   },
   bottomNav: {
     flexDirection: 'row',

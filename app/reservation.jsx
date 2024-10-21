@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, Button, ScrollView, Platform } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, ScrollView, Platform } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Link } from 'expo-router'; // Import Link component if routing is required
@@ -7,12 +7,9 @@ import { Link } from 'expo-router'; // Import Link component if routing is requi
 export default function ReservationScreen() {
   const [selectedPet, setSelectedPet] = useState();
   const [selectedService, setSelectedService] = useState();
-  
-  // State for Date Picker
+  const [descriptionText, setDescriptionText] = useState(''); // State for description
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-
-  // State for Time Picker
   const [time, setTime] = useState(new Date());
   const [showTimePicker, setShowTimePicker] = useState(false);
 
@@ -39,6 +36,35 @@ export default function ReservationScreen() {
     hours = hours % 12 || 12;
     const paddedMinutes = minutes < 10 ? `0${minutes}` : minutes;
     return `${hours}:${paddedMinutes} ${ampm}`;
+  };
+
+  const handleSubmit = async () => {
+    const reservationData = {
+      pet_type: selectedPet,
+      service_type: selectedService,
+      description: descriptionText,
+      reservation_date: formatDate(date),
+      reservation_time: formatTime(time),
+    };
+
+    try {
+      const response = await fetch('http://192.168.130.209:3000/api/reservations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reservationData),
+      });
+
+      if (response.ok) {
+        alert('Reservation submitted successfully!');
+      } else {
+        alert('Failed to submit reservation. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred. Please try again.');
+    }
   };
 
   return (
@@ -70,8 +96,11 @@ export default function ReservationScreen() {
             style={styles.picker}
           >
             <Picker.Item label="Select Pet" value="" />
-            <Picker.Item label="Bogart" value="bogart" />
-            <Picker.Item label="Max" value="max" />
+            <Picker.Item label="Dog" value="dog" />
+            <Picker.Item label="Cat" value="cat" />
+            <Picker.Item label="Bunny" value="bunny" />
+            <Picker.Item label="Bird" value="bird" />
+            <Picker.Item label="Others" value="others" />
           </Picker>
         </View>
 
@@ -96,6 +125,7 @@ export default function ReservationScreen() {
           placeholder="Describe the issue or service required"
           placeholderTextColor="#888"
           multiline
+          onChangeText={setDescriptionText} // Update description text
         />
 
         {/* Date Picker */}
@@ -130,7 +160,7 @@ export default function ReservationScreen() {
         )}
 
         {/* Submit Button */}
-        <TouchableOpacity style={styles.submitButton}>
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
           <Text style={styles.submitButtonText}>Submit</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -241,7 +271,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 60,
     borderWidth: 2,
     borderColor: '#3B5998',
   },
